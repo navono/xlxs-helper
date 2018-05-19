@@ -135,14 +135,3 @@ func getFilename(filepath string) string {
 	filenameOnly = strings.TrimSuffix(filenameWithSuffix, fileSuffix)
 	return filenameOnly
 }
-
-// func readFiles(folder string) {
-// 	files, _ := ioutil.ReadDir(folder) //specify the current dir
-// 	for _, file := range files {
-// 		if file.IsDir() {
-// 			readFiles(folder + "/" + file.Name())
-// 		} else {
-// 			fmt.Println(folder + file.Name())
-// 		}
-// 	}
-// }
