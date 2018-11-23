@@ -2,11 +2,11 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path"
-	"strconv"
 	"strings"
-	"github.com/360EntSecGroup-Skylar/excelize"
+
+	"github.com/navono/xlxs-readjust/cmd"
 )
 
 type household struct {
@@ -22,106 +22,110 @@ type family struct {
 }
 
 func main() {
-
-	var fileDir = "./2018麻墩/"
-
-	// 遍历文件夹
-	files, err := ioutil.ReadDir(fileDir)
-	if err != nil {
+	if err := cmd.RootCmd.Execute(); err != nil {
 		fmt.Println(err)
-		return
+		os.Exit(1)
 	}
 
-	for _, file := range files {
-		templateXlsx, err := excelize.OpenFile("./2.xls")
-		// templateXlsx, err := excelize.OpenFile("./1.xlsx")
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
+	// var fileDir = "./2018麻墩/"
 
-		groupXlsx, err := excelize.OpenFile(fileDir + file.Name())
-		if err != nil {
-			fmt.Printf("打开 %s 失败，原因：%s", file.Name(), err)
-			fmt.Println()
-			continue
-		}
+	// // 遍历文件夹
+	// files, err := ioutil.ReadDir(fileDir)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	return
+	// }
 
-		var rows = groupXlsx.GetRows("Sheet1")
-		// 从第6行开始读取：
-		// 第 2 列 （姓名）
-		// 第 3 列 （ID）
-		// 第 11 列 （性别）
-		// 第 14 列 （家庭关系）
+	// for _, file := range files {
+	// 	templateXlsx, err := excelize.OpenFile("./2.xls")
+	// 	// templateXlsx, err := excelize.OpenFile("./1.xlsx")
+	// 	if err != nil {
+	// 		fmt.Println(err)
+	// 		return
+	// 	}
 
-		var familyList []*family
-		var singleFamily *family
-		bFamily := true
+	// 	groupXlsx, err := excelize.OpenFile(fileDir + file.Name())
+	// 	if err != nil {
+	// 		fmt.Printf("打开 %s 失败，原因：%s", file.Name(), err)
+	// 		fmt.Println()
+	// 		continue
+	// 	}
 
-		for rowIdx, rowInfo := range rows {
-			if rowIdx <= 4 || rowInfo[2] == "" {
-				continue
-			}
+	// 	var rows = groupXlsx.GetRows("Sheet1")
+	// 	// 从第6行开始读取：
+	// 	// 第 2 列 （姓名）
+	// 	// 第 3 列 （ID）
+	// 	// 第 11 列 （性别）
+	// 	// 第 14 列 （家庭关系）
 
-			var member = new(household)
-			member.name = rowInfo[2]
-			member.id = rowInfo[3]
-			member.gender = rowInfo[11]
+	// 	var familyList []*family
+	// 	var singleFamily *family
+	// 	bFamily := true
 
-			if rowInfo[14] == "本人或户主" {
-				singleFamily = new(family)
-				bFamily = true
-				member.header = true
-			} else {
-				member.relationship = rowInfo[14]
-				member.header = false
-				bFamily = false
-			}
+	// 	for rowIdx, rowInfo := range rows {
+	// 		if rowIdx <= 4 || rowInfo[2] == "" {
+	// 			continue
+	// 		}
 
-			if bFamily {
-				familyList = append(familyList, singleFamily)
-			}
-			singleFamily.members = append(singleFamily.members, member)
-		}
+	// 		var member = new(household)
+	// 		member.name = rowInfo[2]
+	// 		member.id = rowInfo[3]
+	// 		member.gender = rowInfo[11]
 
-		for _, f := range familyList {
-			var sheetName string
-			baseMemberRowIdx := 8
-			for _, member := range f.members {
-				if member.header {
-					// 新建一个sheet，以户主为名
-					sheetName = member.name
-					sheetIndex := templateXlsx.NewSheet(sheetName)
-					templateXlsx.CopySheet(1, sheetIndex)
+	// 		if rowInfo[14] == "本人或户主" {
+	// 			singleFamily = new(family)
+	// 			bFamily = true
+	// 			member.header = true
+	// 		} else {
+	// 			member.relationship = rowInfo[14]
+	// 			member.header = false
+	// 			bFamily = false
+	// 		}
 
-					// 申请人
-					templateXlsx.SetCellValue(sheetName, "C4", member.name)
+	// 		if bFamily {
+	// 			familyList = append(familyList, singleFamily)
+	// 		}
+	// 		singleFamily.members = append(singleFamily.members, member)
+	// 	}
 
-					// 申请人性别
-					templateXlsx.SetCellValue(sheetName, "G4", member.gender)
+	// 	for _, f := range familyList {
+	// 		var sheetName string
+	// 		baseMemberRowIdx := 8
+	// 		for _, member := range f.members {
+	// 			if member.header {
+	// 				// 新建一个sheet，以户主为名
+	// 				sheetName = member.name
+	// 				sheetIndex := templateXlsx.NewSheet(sheetName)
+	// 				templateXlsx.CopySheet(1, sheetIndex)
 
-					// 申请人ID
-					templateXlsx.SetCellValue(sheetName, "M4", member.id)
+	// 				// 申请人
+	// 				templateXlsx.SetCellValue(sheetName, "C4", member.name)
 
-					cell := templateXlsx.GetCellValue(sheetName, "A3")
-					templateXlsx.SetCellValue(sheetName, "A3", cell+"麻墩村"+getFilename(file.Name()))
-				} else {
-					// 姓名
-					templateXlsx.SetCellValue(sheetName, "C"+strconv.Itoa(baseMemberRowIdx), member.name)
+	// 				// 申请人性别
+	// 				templateXlsx.SetCellValue(sheetName, "G4", member.gender)
 
-					// 与申请人关系
-					templateXlsx.SetCellValue(sheetName, "D"+strconv.Itoa(baseMemberRowIdx), member.relationship)
+	// 				// 申请人ID
+	// 				templateXlsx.SetCellValue(sheetName, "M4", member.id)
 
-					// ID
-					templateXlsx.SetCellValue(sheetName, "E"+strconv.Itoa(baseMemberRowIdx), member.id)
-					baseMemberRowIdx++
-				}
-			}
-		}
+	// 				cell := templateXlsx.GetCellValue(sheetName, "A3")
+	// 				templateXlsx.SetCellValue(sheetName, "A3", cell+"麻墩村"+getFilename(file.Name()))
+	// 			} else {
+	// 				// 姓名
+	// 				templateXlsx.SetCellValue(sheetName, "C"+strconv.Itoa(baseMemberRowIdx), member.name)
 
-		templateXlsx.SetActiveSheet(2)
-		templateXlsx.SaveAs("./情况表/" + file.Name())
-	}
+	// 				// 与申请人关系
+	// 				templateXlsx.SetCellValue(sheetName, "D"+strconv.Itoa(baseMemberRowIdx), member.relationship)
+
+	// 				// ID
+	// 				templateXlsx.SetCellValue(sheetName, "E"+strconv.Itoa(baseMemberRowIdx), member.id)
+	// 				baseMemberRowIdx++
+	// 			}
+	// 		}
+	// 	}
+
+	// 	templateXlsx.SetActiveSheet(2)
+	// 	templateXlsx.SaveAs("./情况表/" + file.Name())
+	// }
 }
 
 func getFilename(filepath string) string {
