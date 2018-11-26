@@ -1,4 +1,4 @@
-# xlsx-readjust
+# xlsx-helper
 - 使用`excelize`库。
 - 用提供的Sheet模板，将必要的信息填入（从其他文件读取）到模板，生成新的Sheet
 
