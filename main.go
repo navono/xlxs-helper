@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/navono/xlxs-helper/cmd"
+	"xlxs-helper/cmd"
 )
 
 func main() {
